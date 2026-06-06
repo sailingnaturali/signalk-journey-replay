@@ -154,9 +154,9 @@ test('always-wrong sha: rejects after 2 attempts, no file left', async () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 5: HTTP 404 — rejects with HTTP 404 message, no file at dest
+// Test 5: HTTP 404 — rejects with HTTP 404 message, no file at dest, 2 requests
 // ─────────────────────────────────────────────────────────────────────────────
-test('HTTP 404: rejects with HTTP 404 error, no file at dest', async () => {
+test('HTTP 404: rejects with HTTP 404 error, no file at dest, 2 requests made', async () => {
   let requests = 0
   const server = await startServer((_req, res) => {
     requests++
@@ -177,6 +177,75 @@ test('HTTP 404: rejects with HTTP 404 error, no file at dest', async () => {
 
     const dest = path.join(cacheDir, 'archive.bin')
     assert.ok(!fs.existsSync(dest), 'no file at dest after 404')
+    assert.equal(requests, 2, 'exactly 2 requests made (initial + retry)')
+  } finally {
+    server.close()
+    fs.rmSync(cacheDir, { recursive: true, force: true })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 6: partial download (socket destroyed mid-response) — retries once,
+//         succeeds on attempt 2, file is correct, exactly 2 requests
+// ─────────────────────────────────────────────────────────────────────────────
+test('partial download: retries after socket destroy, succeeds on attempt 2', async () => {
+  let requests = 0
+  const server = await startServer((req, res) => {
+    requests++
+    if (requests === 1) {
+      // Send partial bytes then destroy socket mid-response
+      res.writeHead(200)
+      res.write(FIXED_BYTES.slice(0, 4))
+      res.destroy()
+    } else {
+      // Second request: serve full correct body
+      res.writeHead(200)
+      res.end(FIXED_BYTES)
+    }
+  })
+
+  const cacheDir = makeTmpDir()
+
+  try {
+    const dest = await fetchArchive(
+      { url: serverUrl(server), sha256: FIXED_SHA, bytes: FIXED_BYTES.length },
+      cacheDir
+    )
+
+    assert.ok(fs.existsSync(dest), 'file exists after retry')
+    assert.deepEqual(fs.readFileSync(dest), FIXED_BYTES, 'final file has correct content')
+    assert.equal(requests, 2, 'exactly 2 requests were made')
+  } finally {
+    server.close()
+    fs.rmSync(cacheDir, { recursive: true, force: true })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 7: socket destroyed on every request — rejects, no file remains, 2 requests
+// ─────────────────────────────────────────────────────────────────────────────
+test('socket destroyed on every request: rejects, no file left, 2 requests', async () => {
+  let requests = 0
+  const server = await startServer((req, res) => {
+    requests++
+    res.writeHead(200)
+    res.write(FIXED_BYTES.slice(0, 4))
+    res.destroy()
+  })
+
+  const cacheDir = makeTmpDir()
+
+  try {
+    await assert.rejects(
+      () => fetchArchive(
+        { url: serverUrl(server), sha256: FIXED_SHA, bytes: FIXED_BYTES.length },
+        cacheDir
+      )
+    )
+
+    const dest = path.join(cacheDir, 'archive.bin')
+    assert.ok(!fs.existsSync(dest), 'no partial file left after both attempts fail')
+    assert.equal(requests, 2, 'exactly 2 requests were made')
   } finally {
     server.close()
     fs.rmSync(cacheDir, { recursive: true, force: true })
