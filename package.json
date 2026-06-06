@@ -1,0 +1,13 @@
+{
+  "name": "@sailingnaturali/signalk-journey-replay",
+  "version": "0.1.0",
+  "description": "Replay published voyage data (journey-data archives) on any SignalK server — download a trip, press play",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["signalk-node-server-plugin", "signalk-category-utility"],
+  "repository": { "type": "git", "url": "https://github.com/sailingnaturali/signalk-journey-replay.git" },
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}
