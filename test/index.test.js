@@ -229,3 +229,29 @@ test('schema after start: tripId.enum includes t1 from cached manifest', async (
     fs.rmSync(dataDir, { recursive: true, force: true })
   }
 })
+
+test('loop replays the trip again: at least 6 messages (3 deltas × 2 replays), no errors', async () => {
+  const { buf, sha256, bytes } = buildArchive(1)
+  const { server, manifestUrl } = await startServer(buf, sha256, bytes)
+  const dataDir = tmp()
+  const app = fakeApp(dataDir)
+  const plugin = require('../index')(app)
+
+  try {
+    plugin.start({ manifestUrl, tripId: 't1', speed: 1000, loop: true })
+
+    // Wait for at least 6 messages (3-delta fixture replayed at least twice)
+    await until(() => app.messages.length >= 6, 5000)
+
+    plugin.stop()
+
+    // Brief wait to ensure no errors occur after stop
+    await new Promise(r => setTimeout(r, 100))
+
+    // Verify no errors occurred
+    assert.strictEqual(app.errors.length, 0, `expected no errors, got: ${JSON.stringify(app.errors)}`)
+  } finally {
+    server.close()
+    fs.rmSync(dataDir, { recursive: true, force: true })
+  }
+})
