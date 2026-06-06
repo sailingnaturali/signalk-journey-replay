@@ -44,3 +44,9 @@ test('HTTP error status falls back to cache', async () => {
   s.close()
   assert.strictEqual(r.fromCache, true)
 })
+
+test('corrupted cache during fallback rethrows the fetch error, not the parse error', async () => {
+  const dir = tmp()
+  fs.writeFileSync(path.join(dir, 'manifest.json'), '{corrupt')
+  await assert.rejects(() => loadManifest('http://127.0.0.1:1/manifest.json', dir), /fetch failed|ECONNREFUSED/)
+})
