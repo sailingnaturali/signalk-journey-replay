@@ -51,6 +51,9 @@ server by dropping the `context` field — the deltas arrive exactly as if your
 own instruments produced them. All other contexts (AIS targets) pass through
 unchanged.
 
+Replayed values carry `$source: journey-replay.<original-source>` so they are
+distinguishable from live data on any consuming server.
+
 ## Coexistence warning
 
 Anything else emitting the same paths — simulators, mock plugins, real

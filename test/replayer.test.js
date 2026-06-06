@@ -87,6 +87,48 @@ test('original mode emits fresh update objects, not source references', async ()
   assert.notStrictEqual(h2.emitted[0].updates, h.emitted[0].updates)
 })
 
+test('source attribution: $source prefixed with journey-replay.; source object removed', async () => {
+  // Update with $source only
+  const withDollarSource = JSON.stringify({
+    updates: [{
+      timestamp: new Date(T0).toISOString(),
+      $source: 'gps.dongle',
+      values: [{ path: 'navigation.speedOverGround', value: 3 }]
+    }]
+  })
+  // Update with source object (no $source)
+  const withSourceObj = JSON.stringify({
+    updates: [{
+      timestamp: new Date(T0 + 1000).toISOString(),
+      source: { label: 'n2k', src: '3' },
+      values: [{ path: 'navigation.headingTrue', value: 1.2 }]
+    }]
+  })
+  // Update with neither
+  const withNeither = JSON.stringify({
+    updates: [{
+      timestamp: new Date(T0 + 2000).toISOString(),
+      values: [{ path: 'environment.depth.belowKeel', value: 15 }]
+    }]
+  })
+  const f = fixture([META, withDollarSource, withSourceObj, withNeither])
+  const h = harness(f)
+  await h.run()
+  assert.strictEqual(h.emitted.length, 3)
+
+  const u0 = h.emitted[0].updates[0]
+  assert.strictEqual(u0.$source, 'journey-replay.gps.dongle')
+  assert.ok(!('source' in u0), 'source object must be absent when $source present')
+
+  const u1 = h.emitted[1].updates[0]
+  assert.strictEqual(u1.$source, 'journey-replay.n2k')
+  assert.ok(!('source' in u1), 'source object must be removed')
+
+  const u2 = h.emitted[2].updates[0]
+  assert.strictEqual(u2.$source, 'journey-replay.unknown')
+  assert.ok(!('source' in u2), 'source object must be absent')
+})
+
 test('malformed lines counted, replay continues; abort stops promptly', async () => {
   const f = fixture([META, delta(0, null, 'a.b', 1), '{nope', delta(1, null, 'a.b', 2)])
   const h = harness(f)
