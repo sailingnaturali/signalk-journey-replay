@@ -73,6 +73,20 @@ test('original mode keeps timestamps, still paces', async () => {
   assert.deepStrictEqual(h.sleeps.filter(ms => ms > 0), [3000])
 })
 
+test('original mode emits fresh update objects, not source references', async () => {
+  const f = fixture([META, delta(0, null, 'a.b', 1)])
+  const h = harness(f, { timestampMode: 'original' })
+  await h.run()
+  const origTimestamp = h.emitted[0].updates[0].timestamp
+  h.emitted[0].updates[0].timestamp = 'MUTATED'
+
+  // Re-run on same file and verify emitted updates are fresh
+  const h2 = harness(f, { timestampMode: 'original' })
+  await h2.run()
+  assert.strictEqual(h2.emitted[0].updates[0].timestamp, origTimestamp)
+  assert.notStrictEqual(h2.emitted[0].updates, h.emitted[0].updates)
+})
+
 test('malformed lines counted, replay continues; abort stops promptly', async () => {
   const f = fixture([META, delta(0, null, 'a.b', 1), '{nope', delta(1, null, 'a.b', 2)])
   const h = harness(f)
