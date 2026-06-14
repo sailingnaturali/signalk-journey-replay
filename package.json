@@ -1,6 +1,6 @@
 {
   "name": "@sailingnaturali/signalk-journey-replay",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Replay published voyage data (journey-data archives) on any SignalK server — download a trip, press play",
   "main": "index.js",
   "scripts": {
