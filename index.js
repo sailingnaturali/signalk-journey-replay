@@ -4,6 +4,7 @@ const path = require('node:path')
 const { loadManifest } = require('./lib/manifest')
 const { fetchArchive } = require('./lib/download')
 const { replay } = require('./lib/replayer')
+const { availableTripsMessage } = require('./lib/trips')
 
 const DEFAULT_MANIFEST = 'https://sailingnaturali.github.io/journey-data/manifest.json'
 const STATUS_INTERVAL_MS = 5000
@@ -58,9 +59,7 @@ module.exports = function (app) {
     const { manifest, fromCache } = await loadManifest(config.manifestUrl || DEFAULT_MANIFEST, cacheDir())
     const trip = manifest.trips.find(t => t.id === config.tripId)
     if (!trip) {
-      app.setPluginError(config.tripId
-        ? `trip not found: ${config.tripId}`
-        : 'choose a trip in the plugin config (reopen config after this first start to see the trip list)')
+      app.setPluginError(availableTripsMessage(manifest.trips.map(t => t.id), config.tripId))
       return
     }
     app.setPluginStatus(`downloading ${trip.id}…`)
