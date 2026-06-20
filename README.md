@@ -20,8 +20,8 @@ npm package: `@sailingnaturali/signalk-journey-replay`
 
 | Key | Default | Notes |
 |-----|---------|-------|
-| `manifestUrl` | `https://sailingnaturali.github.io/journey-data/manifest.json` | Point at any conforming manifest to replay your own journeys. |
-| `tripId` | — | Select a trip from the dropdown. **First-use quirk:** the list populates from the cached manifest, so enable the plugin once with a network connection, then reopen the config to see the trip list. |
+| `manifestUrl` | `https://sailingnaturali.github.io/journey-data/manifest.json` | Point at any conforming manifest to replay your own journeys. A trip's `files.*.url` may be **relative to this URL** (co-locate archives with the manifest) or absolute. |
+| `tripId` | — | Select a trip from the dropdown, or type a trip id directly (it's free-text). **First start** lists the available ids in the plugin status line and caches the manifest, so reopen the config afterward to get the populated dropdown. |
 | `speed` | `1` | Pacing divisor: `1` = real-time, `10` = 10× faster, `60` = 60× faster. Inter-delta gaps are divided by this value. Enum: `1`, `10`, `60`. |
 | `loop` | `false` | Restart the trip automatically when it finishes. |
 | `timestampMode` | `rebase` | `rebase` shifts all timestamps so the trip starts at the current time — keeps time-relative consumers (tide plugins, weather overlays) coherent. `original` keeps the recorded timestamps, useful for historical analysis. |
