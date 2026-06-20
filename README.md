@@ -74,6 +74,10 @@ Point `manifestUrl` at any manifest that matches the
 The `files.deltas` entry is required; a `self` field in the metadata line is
 recommended so the recorded vessel maps correctly to `self` on replay.
 
+Full schema, hosting recipe, and gotchas (absolute URLs, `self` mapping,
+rebase vs original): **[Bring your own journey data →
+journey-data/docs/BRING-YOUR-OWN-DATA.md](https://github.com/sailingnaturali/journey-data/blob/main/docs/BRING-YOUR-OWN-DATA.md)**.
+
 ## License
 
 MIT
