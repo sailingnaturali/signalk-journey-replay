@@ -15,6 +15,9 @@
     "nmea",
     "demo"
   ],
+  "signalk": {
+    "displayName": "Journey Replay"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/sailingnaturali/signalk-journey-replay.git"
